@@ -5,6 +5,10 @@ pipeline {
         nodejs 'nodejs'
     }
 
+    environment {
+        SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
+    }
+
     stages {
 
         stage('Check Node & NPM') {
@@ -23,6 +27,20 @@ pipeline {
         stage('Build Angular Application') {
             steps {
                 bat 'npm run build'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    bat """
+                    sonar-scanner ^
+                      -Dsonar.projectKey=angular-app ^
+                      -Dsonar.projectName=Angular App ^
+                      -Dsonar.sources=. ^
+                      -Dsonar.host.url=http://localhost:9000
+                    """
+                }
             }
         }
     }
