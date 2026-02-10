@@ -30,18 +30,22 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    bat """
-                    sonar-scanner ^
-                      -Dsonar.projectKey=angular-app ^
-                      -Dsonar.projectName=Angular App ^
-                      -Dsonar.sources=. ^
-                      -Dsonar.host.url=http://localhost:9000
-                    """
-                }
+    stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('sonarqube') {
+
+            script {
+                def scannerHome = tool 'SonarQubeScanner'
+                bat """
+                "${scannerHome}\\bin\\sonar-scanner.bat" ^
+                -Dsonar.projectKey=angular-app ^
+                -Dsonar.projectName="Angular App" ^
+                -Dsonar.sources=. ^
+                -Dsonar.host.url=http://localhost:9000
+                """
             }
         }
     }
+}
+
 }
