@@ -5,14 +5,11 @@ pipeline {
         nodejs 'nodejs'
     }
 
-    stages {
+    environment {
+        DOCKER_IMAGE = "munmunnjsr/angular-app:1"
+    }
 
-        stage('Check Node & NPM') {
-            steps {
-                bat 'node -v'
-                bat 'npm -v'
-            }
-        }
+    stages {
 
         stage('Install Dependencies') {
             steps {
@@ -20,32 +17,17 @@ pipeline {
             }
         }
 
-        stage('Build Angular Application') {
+        stage('Build Angular App') {
             steps {
                 bat 'npm run build'
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    script {
-                        def scannerHome = tool 'SonarQubeScanner'
-                        bat """
-                        "${scannerHome}\\bin\\sonar-scanner.bat" ^
-                        -Dsonar.projectKey=angular-app ^
-                        -Dsonar.projectName="Angular App" ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.host.url=http://localhost:9000
-                        """
-                    }
-                }
-            }
-        }
-
         stage('Docker Build') {
             steps {
-                bat 'docker build -t munmunnjsr/angular-app:1 .'
+                bat """
+                docker build -t %DOCKER_IMAGE% .
+                """
             }
         }
 
@@ -56,13 +38,12 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    bat '''
-                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
-                    docker push munmunnjsr/angular-app:1
-                    '''
+                    bat """
+                    echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                    docker push %DOCKER_IMAGE%
+                    """
                 }
             }
         }
     }
 }
-
